@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MatBrief — Bulletin quotidien des matières premières plastiques</title>
+<meta name="description" content="MatBrief — le bulletin quotidien des prix des matières premières plastiques pour le marché marocain. PVC, polyéthylène, plastifiants : prix par origine, fret, douane et prévisions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #212a36;
+    --orange: #e8541f;
+    --grey: #6b7686;
+    --line: #e6e9ee;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #ffffff;
+    color: var(--navy);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 48px 24px;
+  }
+  .logo {
+    font-weight: 800;
+    font-size: clamp(44px, 8vw, 72px);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .logo .dot { color: var(--orange); }
+  .tagline {
+    margin-top: 10px;
+    font-size: clamp(11px, 1.6vw, 14px);
+    font-weight: 700;
+    letter-spacing: 0.42em;
+    text-indent: 0.42em;
+    color: var(--navy);
+    text-transform: uppercase;
+  }
+  .rule {
+    width: 64px;
+    height: 3px;
+    background: var(--orange);
+    border-radius: 2px;
+    margin: 36px auto;
+  }
+  .construction {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--navy);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 14px 28px;
+    background: #fafbfc;
+  }
+  .construction svg { display: block; }
+  .contact {
+    margin-top: 44px;
+    font-size: 15px;
+    color: var(--grey);
+  }
+  .contact a {
+    color: var(--navy);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 2px solid var(--orange);
+    padding-bottom: 1px;
+  }
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 20px 24px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--grey);
+    letter-spacing: 0.02em;
+  }
+</style>
+</head>
+<body>
+<main>
+  <div>
+    <div class="logo">MatBrief<span class="dot">.</span></div>
+    <div class="tagline">Bulletin quotidien</div>
+    <div class="rule"></div>
+    <div class="construction">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M14.7 6.3a4.5 4.5 0 0 0-5.9 5.6L3.3 17.4a1.9 1.9 0 0 0 0 2.7l.6.6a1.9 1.9 0 0 0 2.7 0l5.5-5.5a4.5 4.5 0 0 0 5.6-5.9l-2.8 2.8-2.5-.6-.6-2.5 2.9-2.7z" stroke="#e8541f" stroke-width="1.8" stroke-linejoin="round"/>
+      </svg>
+      Site en construction
+    </div>
+    <p class="contact">
+      Contact&nbsp;: <a href="mailto:dsekkat@matbrief.com">dsekkat@matbrief.com</a>
+    </p>
+  </div>
+</main>
+<footer>
+  © 2026 MatBrief — Casablanca, Maroc
+</footer>
+</body>
+</html>
