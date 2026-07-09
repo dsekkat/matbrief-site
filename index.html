@@ -10,23 +10,27 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy: #111;
+    --ink: #111;
     --orange: #e8541f;
-    --grey: #6b7686;
-    --line: #e6e9ee;
+    --muted: #6b7686;
+    --hairline: #ececf0;
+    --hairline-strong: #e2e4ea;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; }
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #ffffff;
-    color: var(--navy);
+    background: radial-gradient(1100px 620px at 50% -8%, #fbfbfd 0%, #ffffff 62%);
+    color: var(--ink);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   main {
     flex: 1;
@@ -35,66 +39,78 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 48px 24px;
+    padding: 64px 24px;
+  }
+  main > div {
+    animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(9px); }
+    to   { opacity: 1; transform: none; }
   }
   .logo {
     font-weight: 800;
-    font-size: clamp(44px, 8vw, 72px);
-    letter-spacing: -0.02em;
-    line-height: 1;
+    font-size: clamp(50px, 8.5vw, 82px);
+    letter-spacing: -0.038em;
+    line-height: 0.98;
+    color: var(--ink);
   }
   .logo .dot { color: var(--orange); }
   .tagline {
-    margin-top: 10px;
-    font-size: clamp(11px, 1.6vw, 14px);
-    font-weight: 700;
-    letter-spacing: 0.42em;
-    text-indent: 0.42em;
-    color: var(--navy);
+    margin-top: 15px;
+    font-size: clamp(10.5px, 1.4vw, 12.5px);
+    font-weight: 600;
+    letter-spacing: 0.46em;
+    text-indent: 0.46em;
+    color: var(--ink);
     text-transform: uppercase;
   }
   .rule {
-    width: 64px;
-    height: 3px;
+    width: 40px;
+    height: 2px;
     background: var(--orange);
     border-radius: 2px;
-    margin: 36px auto;
+    margin: 34px auto 32px;
   }
   .construction {
-    margin-top: 8px;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--navy);
-    border: 1.5px solid var(--line);
+    color: var(--ink);
+    border: 1px solid var(--hairline-strong);
     border-radius: 999px;
-    padding: 14px 28px;
-    background: #fafbfc;
+    padding: 12px 22px;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(17, 17, 17, 0.04), 0 8px 24px rgba(17, 17, 17, 0.045);
   }
-  .construction svg { display: block; }
+  .construction svg { display: block; flex: none; width: 20px; height: 20px; }
   .contact {
-    margin-top: 44px;
-    font-size: 15px;
-    color: var(--grey);
+    margin-top: 40px;
+    font-size: 14.5px;
+    color: var(--muted);
+    letter-spacing: 0.01em;
   }
   .contact a {
-    color: var(--navy);
+    color: var(--ink);
     font-weight: 600;
     text-decoration: none;
-    border-bottom: 2px solid var(--orange);
+    border-bottom: 1.5px solid var(--orange);
     padding-bottom: 1px;
+    transition: color 0.15s ease;
   }
+  .contact a:hover { color: var(--orange); }
   footer {
-    border-top: 1px solid var(--line);
-    padding: 20px 24px;
+    border-top: 1px solid var(--hairline);
+    padding: 22px 24px;
     text-align: center;
-    font-size: 12.5px;
-    color: var(--grey);
-    letter-spacing: 0.02em;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.05em;
   }
 </style>
 </head>
