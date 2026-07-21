@@ -92,7 +92,7 @@
     <span class="zctl">
       <button class="zbtn" id="zminus" aria-label="Texte plus petit">A&#8722;</button>
       <button class="zbtn" id="zplus" aria-label="Texte plus grand">A+</button>
-      <span class="ver">v8</span>
+      <span class="ver">v9</span>
     </span>
   </div>
 </header>
@@ -154,18 +154,22 @@
        narrow screen (extra columns are created off-screen) → single column */
     ' div[style*="column-count"]{column-count:1 !important; height:auto !important;',
     '   overflow:visible !important;}',
-    /* forecast tables: natural width, slide sideways inside the page,
-       material column frozen on the left (page itself never drifts) */
+    /* ALL price tables: natural width with air around every number, slide
+       sideways inside the page, first column frozen (page never drifts) */
     ' .fctwrap{overflow-x:auto; -webkit-overflow-scrolling:touch;',
-    '   margin:8px -15px 24px; padding:0 15px;}',
-    ' .fctbl{width:max-content !important; min-width:100% !important; margin:0 !important;}',
-    ' .fctbl th, .fctbl td{white-space:nowrap !important; padding:8px 10px !important;',
-    '   font-size:10.5px !important; overflow-wrap:normal !important; hyphens:none !important;}',
-    ' .fctbl thead th{font-size:9px !important;}',
-    ' .fctbl td:first-child, .fctbl th:first-child{position:sticky; left:0; z-index:1;',
-    '   background:#fff; box-shadow:6px 0 6px -4px rgba(20,40,70,.10);}',
-    ' .fctbl tr:nth-child(even) td:first-child{background:#fbfcfd;}',
-    ' .fctbl thead th:first-child{background:#eef2f6;}',
+    '   margin:10px -15px 26px; padding:0 15px;}',
+    ' .sldt{width:max-content !important; min-width:0 !important; margin:0 !important;}',
+    ' .sldt th, .sldt td{white-space:nowrap !important; padding:8px 11px !important;',
+    '   font-size:11px !important; overflow-wrap:normal !important; hyphens:none !important;}',
+    ' .sldt tbody b{font-size:12px !important;}',
+    ' .sldt thead th{font-size:9.5px !important; letter-spacing:.3px !important;}',
+    ' .sldt td:first-child, .sldt th:first-child{position:sticky; left:0; z-index:1;',
+    '   background:#fff; box-shadow:6px 0 6px -4px rgba(20,40,70,.12);}',
+    ' .sldt tr:nth-child(even) td:first-child{background:#fbfcfd;}',
+    ' .sldt thead th:first-child{background:#eef2f6;}',
+    ' .sldt tr.best td:first-child{background:#e8f6ee;}',
+    ' .sldt:not(.fctbl) td:nth-child(2){white-space:normal !important; max-width:150px;',
+    '   overflow-wrap:normal !important;}',
     '}'
   ].join('\n');
 
@@ -178,7 +182,9 @@
     var body = (html.match(/<body[^>]*>([\s\S]*)<\/body>/i) || [,html])[1];
     var sh = content.shadowRoot || content.attachShadow({ mode:'open' });
     sh.innerHTML = '<style>' + css + '\n' + MOBILE_CSS + '</style><div class="broot">' + body + '</div>';
-    sh.querySelectorAll('.fctbl').forEach(function (t) {
+    sh.querySelectorAll('table').forEach(function (t) {
+      if (!t.querySelector('th')) return;               /* only tables with a header row */
+      t.classList.add('sldt');
       var w = document.createElement('div'); w.className = 'fctwrap';
       t.parentNode.insertBefore(w, t); w.appendChild(t);
     });
