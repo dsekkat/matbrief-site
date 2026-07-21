@@ -17,7 +17,7 @@
   :root { --ink:#0c0d0f; --orange:#e8541f; --txt:#f4f5f7; --mut:#8b929d; --bg:#e9edf2; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { height:100%; overflow-x:hidden; }
-  body { margin:0; background:#fff; display:flex; flex-direction:column;
+  body { margin:0; background:#0c0d0f; display:flex; flex-direction:column;
          font-family:-apple-system,'SF Pro Text','Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
 
   /* ── App bar ─────────────────────────────────────────────── */
@@ -56,7 +56,7 @@
   @keyframes pulse { 50% { opacity:.3; } }
 
   /* ── Content (single scroll surface — pinch-zoom friendly) ── */
-  main { flex:1 1 auto; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; position:relative; background:#fff; }
+  main { flex:1 1 auto; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; position:relative; background:#0c0d0f; }
   #content { opacity:0; transition:opacity .45s ease; }
   #content.on { opacity:1; }
   #skel { position:absolute; inset:0; padding:16px 12px; background:var(--bg);
@@ -66,6 +66,10 @@
         background-size:200% 100%; animation:sh 1.2s linear infinite; }
   @keyframes sh { to { background-position:-200% 0; } }
   .sk.h1 { height:120px; } .sk.h2 { height:72px; } .sk.h3 { flex:1; }
+  #endcap { display:none; text-align:center; color:#565c66; font-size:10.5px; letter-spacing:1.5px;
+            text-transform:uppercase; padding:30px 0 calc(env(safe-area-inset-bottom,0px) + 34px); }
+  #endcap img { width:30px; height:30px; border-radius:8px; opacity:.85; display:block; margin:0 auto 10px; }
+  #endcap.on { display:block; }
 </style>
 </head>
 <body>
@@ -92,13 +96,14 @@
     <span class="zctl">
       <button class="zbtn" id="zminus" aria-label="Texte plus petit">A&#8722;</button>
       <button class="zbtn" id="zplus" aria-label="Texte plus grand">A+</button>
-      <span class="ver">v9</span>
+      <span class="ver">v10</span>
     </span>
   </div>
 </header>
 <main id="scroller">
   <div id="skel"><div class="sk h1"></div><div class="sk h2"></div><div class="sk h3"></div></div>
   <div id="content"></div>
+  <div id="endcap"><img src="mark.png" alt=""><div>fin du bulletin</div></div>
 </main>
 <script>
   var content = document.getElementById('content'), skel = document.getElementById('skel'),
@@ -131,7 +136,7 @@
   /* Phone-only reflow, applied inside the bulletin's isolated style scope —
      display only: the published bulletin file itself is never modified. */
   var MOBILE_CSS = [
-    '.broot{overflow-x:clip;}',
+    '.broot{overflow-x:clip; background:#fff;}',
     '@media (max-width:700px){',
     ' .broot{padding:0 !important; background:#fff !important;}',
     ' .page{overflow-x:clip !important; max-width:100% !important;}',
@@ -195,6 +200,7 @@
     applyZoom();
     skel.classList.add('hide');
     content.classList.add('on');
+    document.getElementById('endcap').classList.add('on');
     scroller.scrollTop = 0;
   }
 
