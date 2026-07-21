@@ -14,7 +14,7 @@
 <link rel="icon" href="icon-512.png" type="image/png">
 <link rel="manifest" href="manifest.webmanifest">
 <style>
-  :root { --ink:#0c0d0f; --ink2:#16181c; --orange:#e8541f; --txt:#f4f5f7; --mut:#8b929d; --bg:#e9edf2; }
+  :root { --ink:#0c0d0f; --orange:#e8541f; --txt:#f4f5f7; --mut:#8b929d; --bg:#e9edf2; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { height:100%; }
   body { margin:0; background:var(--bg); display:flex; flex-direction:column;
@@ -43,7 +43,6 @@
   .rbtn:active { transform:scale(.9); background:rgba(255,255,255,.16); }
   .rbtn.spin svg { animation:rot .7s linear infinite; }
   @keyframes rot { to { transform:rotate(360deg); } }
-  /* status line inside the bar */
   .row2 { display:flex; align-items:center; gap:6px; padding:7px 2px 9px; font-size:11px; color:var(--mut); }
   .led { width:6px; height:6px; border-radius:50%; background:#57c46d; box-shadow:0 0 6px rgba(87,196,109,.8);
          transition:background .3s; }
@@ -51,15 +50,12 @@
   .led.wait { background:#c9ced6; box-shadow:none; animation:pulse 1s ease-in-out infinite; }
   @keyframes pulse { 50% { opacity:.3; } }
 
-  /* ── Content ─────────────────────────────────────────────── */
-  main { flex:1 1 auto; position:relative; overflow:hidden; }
-  #frame { width:100%; height:100%; border:0; display:block; background:var(--bg);
-           opacity:0; transition:opacity .45s ease; }
-  #frame.on { opacity:1; }
-
-  /* skeleton shown while loading */
+  /* ── Content (single scroll surface — pinch-zoom friendly) ── */
+  main { flex:1 1 auto; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; position:relative; }
+  #content { opacity:0; transition:opacity .45s ease; }
+  #content.on { opacity:1; }
   #skel { position:absolute; inset:0; padding:16px 12px; background:var(--bg);
-          display:flex; flex-direction:column; gap:12px; transition:opacity .3s; }
+          display:flex; flex-direction:column; gap:12px; transition:opacity .3s; z-index:2; }
   #skel.hide { opacity:0; pointer-events:none; }
   .sk { border-radius:14px; background:linear-gradient(100deg,#dde3ea 40%,#eef2f6 50%,#dde3ea 60%);
         background-size:200% 100%; animation:sh 1.2s linear infinite; }
@@ -88,15 +84,16 @@
   </div>
   <div class="row2"><span class="led wait" id="led"></span><span id="stxt">chargement du bulletin…</span></div>
 </header>
-<main>
+<main id="scroller">
   <div id="skel"><div class="sk h1"></div><div class="sk h2"></div><div class="sk h3"></div></div>
-  <iframe id="frame" title="Bulletin MatBrief du jour"></iframe>
+  <div id="content"></div>
 </main>
 <script>
-  var frame = document.getElementById('frame'), skel = document.getElementById('skel'),
+  var content = document.getElementById('content'), skel = document.getElementById('skel'),
       led = document.getElementById('led'), stxt = document.getElementById('stxt'),
       rbtn = document.getElementById('rbtn'), clockEl = document.getElementById('clock'),
-      cdate = document.getElementById('cdate'), lastLoad = 0;
+      cdate = document.getElementById('cdate'), scroller = document.getElementById('scroller'),
+      lastLoad = 0;
 
   /* live clock */
   function tick() {
@@ -107,11 +104,11 @@
   }
   tick(); setInterval(tick, 1000);
 
-  /* CSS injected into the bulletin so it reflows nicely on a phone —
-     display only, the published bulletin file itself is never modified */
+  /* Phone-only reflow, applied inside the bulletin's isolated style scope —
+     display only: the published bulletin file itself is never modified. */
   var MOBILE_CSS = [
     '@media (max-width:700px){',
-    ' body{padding:12px 9px !important;}',
+    ' .broot{padding:12px 9px !important;}',
     ' .page{min-height:0 !important; padding:22px 15px 18px !important;',
     '   margin:0 auto 12px !important; border-radius:16px !important;',
     '   box-shadow:0 2px 10px rgba(20,40,70,.10) !important;}',
@@ -120,42 +117,52 @@
     ' .title{font-size:23px !important; letter-spacing:-.4px !important;}',
     ' svg{max-width:100% !important; height:auto !important;}',
     ' table{width:100% !important;}',
-    ' td:first-child, th:first-child{white-space:normal !important;}',      /* stop 1st-column overflow */
-    ' th{overflow-wrap:anywhere; hyphens:auto;}',                           /* headers wrap, never overlap */
-    ' table[style*="font-size:10px"] td{white-space:normal !important;}',   /* news source names wrap */
+    ' td:first-child, th:first-child{white-space:normal !important;}',
+    ' th{overflow-wrap:anywhere; hyphens:auto;}',
+    ' table[style*="font-size:10px"] td{white-space:normal !important;}',
     ' td[style*="padding:0 30px"]{display:inline-block !important; white-space:nowrap !important;',
-    '   padding:2px 16px 2px 0 !important; border:0 !important;}',          /* chart legends flow as chips */
+    '   padding:2px 16px 2px 0 !important; border:0 !important;}',
+    /* reportage pages: fixed-height 2-column layout overflows SIDEWAYS on a
+       narrow screen (extra columns are created off-screen) → single column */
+    ' div[style*="column-count"]{column-count:1 !important; height:auto !important;',
+    '   overflow:visible !important;}',
+    /* forecast table: compress to fit the screen width */
+    ' .fctbl th, .fctbl td{padding:4px 3px !important; white-space:normal !important;}',
+    ' .fctbl{table-layout:auto !important; font-size:9px !important;}',
     '}'
   ].join('\n');
 
   function status(cls, txt) { led.className = 'led ' + cls; stxt.textContent = txt; }
 
-  function load() {
-    rbtn.classList.add('spin');
-    frame.classList.remove('on');
-    skel.classList.remove('hide');
-    status('wait', 'chargement du bulletin…');
-    frame.src = 'latest.html?v=' + Date.now();   /* cache-buster: always the fresh copy */
+  function render(html) {
+    var css = (html.match(/<style>([\s\S]*?)<\/style>/i) || [,''])[1];
+    css = css.replace(/@page[^{}]*\{[^}]*\}/g, '');            /* print rules not needed */
+    css = css.replace(/(^|\})\s*body\s*\{/g, '$1 .broot{');     /* scope body rules to wrapper */
+    var body = (html.match(/<body[^>]*>([\s\S]*)<\/body>/i) || [,html])[1];
+    var sh = content.shadowRoot || content.attachShadow({ mode:'open' });
+    sh.innerHTML = '<style>' + css + '\n' + MOBILE_CSS + '</style><div class="broot">' + body + '</div>';
+    var t = (html.match(/<title>([\s\S]*?)<\/title>/i) || [,''])[1];
+    var d = t.split('—').pop().trim();
+    status('', d ? 'bulletin du ' + d : 'bulletin chargé');
+    lastLoad = Date.now();
+    skel.classList.add('hide');
+    content.classList.add('on');
+    scroller.scrollTop = 0;
   }
 
-  frame.addEventListener('load', function () {
-    try {
-      var doc = frame.contentDocument;
-      var st = doc.createElement('style');
-      st.textContent = MOBILE_CSS;
-      doc.head.appendChild(st);
-      var m = (doc.title || '').split('—').pop().trim();     /* date from the bulletin title */
-      status('', m ? 'bulletin du ' + m.replace(/^\s*bulletin\s*(quotidien)?\s*/i,'') : 'bulletin chargé');
-    } catch (e) { status('', 'bulletin chargé'); }
-    lastLoad = Date.now();
-    rbtn.classList.remove('spin');
-    skel.classList.add('hide');
-    frame.classList.add('on');
-  });
-  frame.addEventListener('error', function () {
-    rbtn.classList.remove('spin');
-    status('off', 'hors ligne — réessayez');
-  });
+  function load() {
+    rbtn.classList.add('spin');
+    status('wait', 'chargement du bulletin…');
+    /* cache-buster: always fetch the freshest copy published by the morning run */
+    fetch('latest.html?v=' + Date.now())
+      .then(function (r) { if (!r.ok) throw 0; return r.text(); })
+      .then(function (html) { rbtn.classList.remove('spin'); render(html); })
+      .catch(function () {
+        rbtn.classList.remove('spin');
+        status('off', lastLoad ? 'hors ligne — bulletin précédent affiché' : 'hors ligne — réessayez');
+        skel.classList.add('hide');
+      });
+  }
 
   rbtn.addEventListener('click', load);
 
