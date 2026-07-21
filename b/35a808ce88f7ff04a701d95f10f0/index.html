@@ -57,6 +57,7 @@
 
   /* ── Content (single scroll surface — pinch-zoom friendly) ── */
   main { flex:1 1 auto; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; position:relative; background:#0c0d0f; }
+  main.pmode { overflow-x:auto; touch-action:pan-x pan-y; }
   #content { opacity:0; transition:opacity .45s ease; }
   #content.on { opacity:1; }
   #skel { position:absolute; inset:0; padding:16px 12px; background:var(--bg);
@@ -94,9 +95,10 @@
   <div class="row2">
     <span class="led wait" id="led"></span><span id="stxt">chargement du bulletin…</span>
     <span class="zctl">
+      <button class="zbtn" id="mbtn" aria-label="Basculer page / lecture">Page</button>
       <button class="zbtn" id="zminus" aria-label="Texte plus petit">A&#8722;</button>
       <button class="zbtn" id="zplus" aria-label="Texte plus grand">A+</button>
-      <span class="ver">v11</span>
+      <span class="ver">v12</span>
     </span>
   </div>
 </header>
@@ -110,18 +112,60 @@
       led = document.getElementById('led'), stxt = document.getElementById('stxt'),
       rbtn = document.getElementById('rbtn'), clockEl = document.getElementById('clock'),
       cdate = document.getElementById('cdate'), scroller = document.getElementById('scroller'),
-      lastLoad = 0, zoom = 1;
-  try { zoom = parseFloat(localStorage.getItem('mb_zoom')) || 1; } catch(e) {}
-  function applyZoom() {
+      lastLoad = 0, zoom = 1, mode = 'lecture';
+  var mbtn = document.getElementById('mbtn');
+  function getLS(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function setLS(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  mode = getLS('mb_mode') || 'lecture';
+  function fitPageZoom(){ return Math.max(0.35, Math.min(1, (scroller.clientWidth - 6) / 848)); }
+  function applyZoom(save) {
     var sh = content.shadowRoot, root = sh && sh.querySelector('.broot');
     if (root) root.style.zoom = zoom;
-    try { localStorage.setItem('mb_zoom', String(zoom)); } catch(e) {}
+    if (save !== false) setLS(mode === 'page' ? 'mb_zoom_p' : 'mb_zoom_l', String(zoom));
   }
+  function applyMode() {
+    var sh = content.shadowRoot; if (!sh) return;
+    var m = sh.querySelector('#mcss'), pcs = sh.querySelector('#pcss');
+    if (m) m.disabled = (mode === 'page');
+    if (pcs) pcs.disabled = (mode !== 'page');
+    scroller.classList.toggle('pmode', mode === 'page');
+    mbtn.textContent = (mode === 'page') ? 'Lecture' : 'Page';
+    zoom = parseFloat(getLS(mode === 'page' ? 'mb_zoom_p' : 'mb_zoom_l')) ||
+           (mode === 'page' ? fitPageZoom() : 1);
+    applyZoom(false);
+    setLS('mb_mode', mode);
+  }
+  mbtn.addEventListener('click', function () {
+    mode = (mode === 'page') ? 'lecture' : 'page';
+    applyMode(); scroller.scrollTop = 0; scroller.scrollLeft = 0;
+  });
+  var ZMAX = { page: 3, lecture: 1.6 }, ZMIN = { page: 0.35, lecture: 0.85 };
   document.getElementById('zplus').addEventListener('click', function () {
-    zoom = Math.min(1.6, Math.round((zoom + 0.15) * 100) / 100); applyZoom();
+    zoom = Math.min(ZMAX[mode === 'page' ? 'page' : 'lecture'], Math.round((zoom + 0.15) * 100) / 100); applyZoom();
   });
   document.getElementById('zminus').addEventListener('click', function () {
-    zoom = Math.max(0.85, Math.round((zoom - 0.15) * 100) / 100); applyZoom();
+    zoom = Math.max(ZMIN[mode === 'page' ? 'page' : 'lecture'], Math.round((zoom - 0.15) * 100) / 100); applyZoom();
+  });
+  /* pinch-to-zoom in page mode: free zoom anchored on your fingers */
+  var pinch = null;
+  function tdist(e){ var a=e.touches[0], b=e.touches[1], dx=a.clientX-b.clientX, dy=a.clientY-b.clientY; return Math.sqrt(dx*dx+dy*dy); }
+  scroller.addEventListener('touchstart', function (e) {
+    if (mode !== 'page' || e.touches.length !== 2) return;
+    var r = scroller.getBoundingClientRect();
+    pinch = { d: tdist(e), z: zoom, sx: scroller.scrollLeft, sy: scroller.scrollTop,
+              cx: (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left,
+              cy: (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top };
+  }, { passive: false });
+  scroller.addEventListener('touchmove', function (e) {
+    if (!pinch || e.touches.length !== 2) return;
+    e.preventDefault();
+    var z = Math.min(3, Math.max(0.35, pinch.z * tdist(e) / pinch.d)), r = z / pinch.z;
+    zoom = z; applyZoom(false);
+    scroller.scrollLeft = (pinch.sx + pinch.cx) * r - pinch.cx;
+    scroller.scrollTop  = (pinch.sy + pinch.cy) * r - pinch.cy;
+  }, { passive: false });
+  scroller.addEventListener('touchend', function () {
+    if (pinch) { setLS('mb_zoom_p', String(zoom)); pinch = null; }
   });
 
   /* live clock */
@@ -135,6 +179,12 @@
 
   /* Phone-only reflow, applied inside the bulletin's isolated style scope —
      display only: the published bulletin file itself is never modified. */
+  /* Page mode: the bulletin's real A4 layout on the dark frame */
+  var PAGE_CSS = [
+    '.broot{width:848px; padding:14px 12px 4px; background:#101114;}',
+    '.page{box-shadow:0 6px 22px rgba(0,0,0,.55);}'
+  ].join('\n');
+
   var MOBILE_CSS = [
     '.broot{overflow-x:clip;}',
     '@media (max-width:700px){',
@@ -186,7 +236,8 @@
     css = css.replace(/(^|\})\s*body\s*\{/g, '$1 .broot{');     /* scope body rules to wrapper */
     var body = (html.match(/<body[^>]*>([\s\S]*)<\/body>/i) || [,html])[1];
     var sh = content.shadowRoot || content.attachShadow({ mode:'open' });
-    sh.innerHTML = '<style>' + css + '\n' + MOBILE_CSS + '</style><div class="broot">' + body + '</div>';
+    sh.innerHTML = '<style>' + css + '</style><style id="mcss">' + MOBILE_CSS +
+                   '</style><style id="pcss">' + PAGE_CSS + '</style><div class="broot">' + body + '</div>';
     sh.querySelectorAll('table').forEach(function (t) {
       if (!t.querySelector('th')) return;               /* only tables with a header row */
       t.classList.add('sldt');
@@ -197,7 +248,7 @@
     var d = t.split('—').pop().trim();
     status('', d ? 'bulletin du ' + d : 'bulletin chargé');
     lastLoad = Date.now();
-    applyZoom();
+    applyMode();
     skel.classList.add('hide');
     content.classList.add('on');
     document.getElementById('endcap').classList.add('on');
