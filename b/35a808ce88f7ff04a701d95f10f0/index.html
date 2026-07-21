@@ -16,7 +16,7 @@
 <style>
   :root { --ink:#0c0d0f; --orange:#e8541f; --txt:#f4f5f7; --mut:#8b929d; --bg:#e9edf2; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body { height:100%; }
+  html,body { height:100%; overflow-x:hidden; }
   body { margin:0; background:var(--bg); display:flex; flex-direction:column;
          font-family:-apple-system,'SF Pro Text','Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
 
@@ -48,6 +48,11 @@
          transition:background .3s; }
   .led.off { background:#e8865f; box-shadow:0 0 6px rgba(232,134,95,.8); }
   .led.wait { background:#c9ced6; box-shadow:none; animation:pulse 1s ease-in-out infinite; }
+  .zctl { margin-left:auto; display:flex; align-items:center; gap:6px; }
+  .zbtn { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); color:#dfe3e8;
+          border-radius:8px; font-size:11px; font-weight:600; padding:2px 9px 3px; line-height:1.4; }
+  .zbtn:active { background:rgba(255,255,255,.18); }
+  .ver { font-size:9px; color:#565c66; letter-spacing:.5px; }
   @keyframes pulse { 50% { opacity:.3; } }
 
   /* ── Content (single scroll surface — pinch-zoom friendly) ── */
@@ -82,7 +87,14 @@
       </svg>
     </button>
   </div>
-  <div class="row2"><span class="led wait" id="led"></span><span id="stxt">chargement du bulletin…</span></div>
+  <div class="row2">
+    <span class="led wait" id="led"></span><span id="stxt">chargement du bulletin…</span>
+    <span class="zctl">
+      <button class="zbtn" id="zminus" aria-label="Texte plus petit">A&#8722;</button>
+      <button class="zbtn" id="zplus" aria-label="Texte plus grand">A+</button>
+      <span class="ver">v6</span>
+    </span>
+  </div>
 </header>
 <main id="scroller">
   <div id="skel"><div class="sk h1"></div><div class="sk h2"></div><div class="sk h3"></div></div>
@@ -93,7 +105,19 @@
       led = document.getElementById('led'), stxt = document.getElementById('stxt'),
       rbtn = document.getElementById('rbtn'), clockEl = document.getElementById('clock'),
       cdate = document.getElementById('cdate'), scroller = document.getElementById('scroller'),
-      lastLoad = 0;
+      lastLoad = 0, zoom = 1;
+  try { zoom = parseFloat(localStorage.getItem('mb_zoom')) || 1; } catch(e) {}
+  function applyZoom() {
+    var sh = content.shadowRoot, root = sh && sh.querySelector('.broot');
+    if (root) root.style.zoom = zoom;
+    try { localStorage.setItem('mb_zoom', String(zoom)); } catch(e) {}
+  }
+  document.getElementById('zplus').addEventListener('click', function () {
+    zoom = Math.min(1.6, Math.round((zoom + 0.15) * 100) / 100); applyZoom();
+  });
+  document.getElementById('zminus').addEventListener('click', function () {
+    zoom = Math.max(0.85, Math.round((zoom - 0.15) * 100) / 100); applyZoom();
+  });
 
   /* live clock */
   function tick() {
@@ -107,8 +131,12 @@
   /* Phone-only reflow, applied inside the bulletin's isolated style scope —
      display only: the published bulletin file itself is never modified. */
   var MOBILE_CSS = [
+    '.broot{overflow-x:clip;}',
     '@media (max-width:700px){',
     ' .broot{padding:12px 9px !important;}',
+    ' .page{overflow-x:clip !important; max-width:100% !important;}',
+    ' .chartcard{max-width:100% !important; overflow-x:clip !important;}',
+    ' .chartcard svg{height:auto !important;}',
     ' .page{min-height:0 !important; padding:22px 15px 18px !important;',
     '   margin:0 auto 12px !important; border-radius:16px !important;',
     '   box-shadow:0 2px 10px rgba(20,40,70,.10) !important;}',
@@ -145,6 +173,7 @@
     var d = t.split('—').pop().trim();
     status('', d ? 'bulletin du ' + d : 'bulletin chargé');
     lastLoad = Date.now();
+    applyZoom();
     skel.classList.add('hide');
     content.classList.add('on');
     scroller.scrollTop = 0;
