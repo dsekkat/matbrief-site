@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MatBrief — Bulletin du jour</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#0c0d0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MatBrief">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-512.png" type="image/png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root { --ink:#0c0d0f; --ink2:#16181c; --orange:#e8541f; --txt:#f4f5f7; --mut:#8b929d; --bg:#e9edf2; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; }
+  body { margin:0; background:var(--bg); display:flex; flex-direction:column;
+         font-family:-apple-system,'SF Pro Text','Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
+
+  /* ── App bar ─────────────────────────────────────────────── */
+  header { flex:0 0 auto; color:var(--txt);
+           background:linear-gradient(180deg,#0b0c0e 0%,#131518 100%);
+           padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 0;
+           box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 6px 18px rgba(10,14,20,.35); }
+  .row1 { display:flex; align-items:center; gap:11px; }
+  .mark { width:34px; height:34px; border-radius:9px; flex:0 0 auto;
+          box-shadow:0 0 0 1px rgba(255,255,255,.08), 0 2px 8px rgba(0,0,0,.4); }
+  .brand { display:flex; flex-direction:column; min-width:0; }
+  .brand .wm { font-size:16.5px; font-weight:700; letter-spacing:-.3px; line-height:1.15; }
+  .brand .wm .dot { color:var(--orange); }
+  .brand .sub { font-size:10.5px; color:var(--mut); letter-spacing:.5px; text-transform:uppercase; }
+  .clockbox { margin-left:auto; text-align:right; }
+  .clock { font-size:21px; font-weight:600; letter-spacing:.5px; line-height:1.1;
+           font-variant-numeric:tabular-nums; }
+  .clock .sec { color:var(--orange); font-size:14px; font-weight:600; }
+  .cdate { font-size:10.5px; color:var(--mut); text-transform:capitalize; margin-top:1px; }
+  .rbtn { flex:0 0 auto; width:36px; height:36px; margin-left:4px; border-radius:11px;
+          background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); color:#fff;
+          display:flex; align-items:center; justify-content:center; transition:transform .15s, background .2s; }
+  .rbtn:active { transform:scale(.9); background:rgba(255,255,255,.16); }
+  .rbtn.spin svg { animation:rot .7s linear infinite; }
+  @keyframes rot { to { transform:rotate(360deg); } }
+  /* status line inside the bar */
+  .row2 { display:flex; align-items:center; gap:6px; padding:7px 2px 9px; font-size:11px; color:var(--mut); }
+  .led { width:6px; height:6px; border-radius:50%; background:#57c46d; box-shadow:0 0 6px rgba(87,196,109,.8);
+         transition:background .3s; }
+  .led.off { background:#e8865f; box-shadow:0 0 6px rgba(232,134,95,.8); }
+  .led.wait { background:#c9ced6; box-shadow:none; animation:pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity:.3; } }
+
+  /* ── Content ─────────────────────────────────────────────── */
+  main { flex:1 1 auto; position:relative; overflow:hidden; }
+  #frame { width:100%; height:100%; border:0; display:block; background:var(--bg);
+           opacity:0; transition:opacity .45s ease; }
+  #frame.on { opacity:1; }
+
+  /* skeleton shown while loading */
+  #skel { position:absolute; inset:0; padding:16px 12px; background:var(--bg);
+          display:flex; flex-direction:column; gap:12px; transition:opacity .3s; }
+  #skel.hide { opacity:0; pointer-events:none; }
+  .sk { border-radius:14px; background:linear-gradient(100deg,#dde3ea 40%,#eef2f6 50%,#dde3ea 60%);
+        background-size:200% 100%; animation:sh 1.2s linear infinite; }
+  @keyframes sh { to { background-position:-200% 0; } }
+  .sk.h1 { height:120px; } .sk.h2 { height:72px; } .sk.h3 { flex:1; }
+</style>
+</head>
+<body>
+<header>
+  <div class="row1">
+    <img class="mark" src="mark.png" alt="">
+    <div class="brand">
+      <div class="wm">MatBrief<span class="dot">.</span></div>
+      <div class="sub">Bulletin du jour</div>
+    </div>
+    <div class="clockbox">
+      <div class="clock" id="clock">--:--</div>
+      <div class="cdate" id="cdate"></div>
+    </div>
+    <button class="rbtn" id="rbtn" aria-label="Actualiser">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/>
+      </svg>
+    </button>
+  </div>
+  <div class="row2"><span class="led wait" id="led"></span><span id="stxt">chargement du bulletin…</span></div>
+</header>
+<main>
+  <div id="skel"><div class="sk h1"></div><div class="sk h2"></div><div class="sk h3"></div></div>
+  <iframe id="frame" title="Bulletin MatBrief du jour"></iframe>
+</main>
+<script>
+  var frame = document.getElementById('frame'), skel = document.getElementById('skel'),
+      led = document.getElementById('led'), stxt = document.getElementById('stxt'),
+      rbtn = document.getElementById('rbtn'), clockEl = document.getElementById('clock'),
+      cdate = document.getElementById('cdate'), lastLoad = 0;
+
+  /* live clock */
+  function tick() {
+    var n = new Date(), p = function(x){ return (x<10?'0':'')+x; };
+    clockEl.innerHTML = p(n.getHours()) + ':' + p(n.getMinutes()) +
+                        ' <span class="sec">' + p(n.getSeconds()) + '</span>';
+    cdate.textContent = n.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+  }
+  tick(); setInterval(tick, 1000);
+
+  /* CSS injected into the bulletin so it reflows nicely on a phone —
+     display only, the published bulletin file itself is never modified */
+  var MOBILE_CSS = [
+    '@media (max-width:700px){',
+    ' body{padding:12px 9px !important;}',
+    ' .page{min-height:0 !important; padding:22px 15px 18px !important;',
+    '   margin:0 auto 12px !important; border-radius:16px !important;',
+    '   box-shadow:0 2px 10px rgba(20,40,70,.10) !important;}',
+    ' .kpis{grid-template-columns:repeat(2,1fr) !important; gap:8px !important;}',
+    ' .kpi .val{font-size:18px !important;}',
+    ' .title{font-size:23px !important; letter-spacing:-.4px !important;}',
+    ' svg{max-width:100% !important; height:auto !important;}',
+    ' table{width:100% !important;}',
+    ' td:first-child, th:first-child{white-space:normal !important;}',      /* stop 1st-column overflow */
+    ' th{overflow-wrap:anywhere; hyphens:auto;}',                           /* headers wrap, never overlap */
+    ' table[style*="font-size:10px"] td{white-space:normal !important;}',   /* news source names wrap */
+    ' td[style*="padding:0 30px"]{display:inline-block !important; white-space:nowrap !important;',
+    '   padding:2px 16px 2px 0 !important; border:0 !important;}',          /* chart legends flow as chips */
+    '}'
+  ].join('\n');
+
+  function status(cls, txt) { led.className = 'led ' + cls; stxt.textContent = txt; }
+
+  function load() {
+    rbtn.classList.add('spin');
+    frame.classList.remove('on');
+    skel.classList.remove('hide');
+    status('wait', 'chargement du bulletin…');
+    frame.src = 'latest.html?v=' + Date.now();   /* cache-buster: always the fresh copy */
+  }
+
+  frame.addEventListener('load', function () {
+    try {
+      var doc = frame.contentDocument;
+      var st = doc.createElement('style');
+      st.textContent = MOBILE_CSS;
+      doc.head.appendChild(st);
+      var m = (doc.title || '').split('—').pop().trim();     /* date from the bulletin title */
+      status('', m ? 'bulletin du ' + m.replace(/^\s*bulletin\s*(quotidien)?\s*/i,'') : 'bulletin chargé');
+    } catch (e) { status('', 'bulletin chargé'); }
+    lastLoad = Date.now();
+    rbtn.classList.remove('spin');
+    skel.classList.add('hide');
+    frame.classList.add('on');
+  });
+  frame.addEventListener('error', function () {
+    rbtn.classList.remove('spin');
+    status('off', 'hors ligne — réessayez');
+  });
+
+  rbtn.addEventListener('click', load);
+
+  /* Reopened from the home screen: reload if it's a new day (fresh 6h30 bulletin)
+     or if the last load is older than 20 minutes. */
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible' || !lastLoad) return;
+    var newDay = new Date(lastLoad).toDateString() !== new Date().toDateString();
+    if (newDay || Date.now() - lastLoad > 20*60*1000) load();
+  });
+
+  load();
+</script>
+</body>
+</html>
