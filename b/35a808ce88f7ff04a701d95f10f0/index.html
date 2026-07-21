@@ -92,7 +92,7 @@
     <span class="zctl">
       <button class="zbtn" id="zminus" aria-label="Texte plus petit">A&#8722;</button>
       <button class="zbtn" id="zplus" aria-label="Texte plus grand">A+</button>
-      <span class="ver">v7</span>
+      <span class="ver">v8</span>
     </span>
   </div>
 </header>
@@ -154,9 +154,18 @@
        narrow screen (extra columns are created off-screen) → single column */
     ' div[style*="column-count"]{column-count:1 !important; height:auto !important;',
     '   overflow:visible !important;}',
-    /* forecast table: compress to fit the screen width */
-    ' .fctbl th, .fctbl td{padding:4px 3px !important; white-space:normal !important;}',
-    ' .fctbl{table-layout:auto !important; font-size:9px !important;}',
+    /* forecast tables: natural width, slide sideways inside the page,
+       material column frozen on the left (page itself never drifts) */
+    ' .fctwrap{overflow-x:auto; -webkit-overflow-scrolling:touch;',
+    '   margin:8px -15px 24px; padding:0 15px;}',
+    ' .fctbl{width:max-content !important; min-width:100% !important; margin:0 !important;}',
+    ' .fctbl th, .fctbl td{white-space:nowrap !important; padding:8px 10px !important;',
+    '   font-size:10.5px !important; overflow-wrap:normal !important; hyphens:none !important;}',
+    ' .fctbl thead th{font-size:9px !important;}',
+    ' .fctbl td:first-child, .fctbl th:first-child{position:sticky; left:0; z-index:1;',
+    '   background:#fff; box-shadow:6px 0 6px -4px rgba(20,40,70,.10);}',
+    ' .fctbl tr:nth-child(even) td:first-child{background:#fbfcfd;}',
+    ' .fctbl thead th:first-child{background:#eef2f6;}',
     '}'
   ].join('\n');
 
@@ -169,6 +178,10 @@
     var body = (html.match(/<body[^>]*>([\s\S]*)<\/body>/i) || [,html])[1];
     var sh = content.shadowRoot || content.attachShadow({ mode:'open' });
     sh.innerHTML = '<style>' + css + '\n' + MOBILE_CSS + '</style><div class="broot">' + body + '</div>';
+    sh.querySelectorAll('.fctbl').forEach(function (t) {
+      var w = document.createElement('div'); w.className = 'fctwrap';
+      t.parentNode.insertBefore(w, t); w.appendChild(t);
+    });
     var t = (html.match(/<title>([\s\S]*?)<\/title>/i) || [,''])[1];
     var d = t.split('—').pop().trim();
     status('', d ? 'bulletin du ' + d : 'bulletin chargé');
