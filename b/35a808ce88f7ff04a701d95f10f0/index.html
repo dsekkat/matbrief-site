@@ -22,8 +22,7 @@
          /* iOS standalone: pin to the REAL screen, and make the frame IMMOVABLE —
             only the report area (#scroller) scrolls; header and tab bar never move */
          position:fixed; top:0; left:0; right:0; bottom:0;
-         height:100dvh; width:100vw; overflow:hidden; overscroll-behavior:none; }
-  @supports not (height: 100dvh) { body { height:100%; } }
+         overflow:hidden; overscroll-behavior:none; }
 
   /* ── App bar ─────────────────────────────────────────────── */
   header { flex:0 0 auto; color:var(--txt);
@@ -132,7 +131,7 @@
       <button class="zbtn" id="mbtn" aria-label="Basculer page / lecture">Page</button>
       <button class="zbtn" id="zminus" aria-label="Texte plus petit">A&#8722;</button>
       <button class="zbtn" id="zplus" aria-label="Texte plus grand">A+</button>
-      <span class="ver">v16</span>
+      <span class="ver">v17</span>
     </span>
   </div>
 </header>
@@ -151,7 +150,7 @@
       <div class="setnote">Le bulletin se met à jour tout seul chaque matin vers 6h31, et à chaque réouverture de l'app.</div>
     </div>
     <div class="setcard"><h4>Avis légal &amp; sources</h4><div id="slegal" class="setnote">(chargé avec le bulletin)</div></div>
-    <div class="setnote" style="text-align:center;margin-top:6px">MatBrief · webapp v16</div>
+    <div class="setnote" style="text-align:center;margin-top:6px">MatBrief · webapp v17</div>
   </div>
   <div id="endcap"><img src="mark.png" alt=""><div>fin du bulletin</div></div>
 </main>
