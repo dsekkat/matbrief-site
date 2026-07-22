@@ -132,7 +132,7 @@
       <button class="zbtn" id="mbtn" aria-label="Basculer page / lecture">Page</button>
       <button class="zbtn" id="zminus" aria-label="Texte plus petit">A&#8722;</button>
       <button class="zbtn" id="zplus" aria-label="Texte plus grand">A+</button>
-      <span class="ver">v18</span>
+      <span class="ver">v19</span>
     </span>
   </div>
 </header>
@@ -150,8 +150,12 @@
       <div class="setrow"><span>Édition chargée</span><span id="sinfo" style="color:#8b929d;font-size:12px">—</span></div>
       <div class="setnote">Le bulletin se met à jour tout seul chaque matin vers 6h31, et à chaque réouverture de l'app.</div>
     </div>
+    <div class="setcard"><h4>Diagnostic écran</h4>
+      <div class="setnote" id="dbgv" style="font-variant-numeric:tabular-nums">mesure…</div>
+      <div class="setnote" id="dbgs"></div>
+    </div>
     <div class="setcard"><h4>Avis légal &amp; sources</h4><div id="slegal" class="setnote">(chargé avec le bulletin)</div></div>
-    <div class="setnote" style="text-align:center;margin-top:6px">MatBrief · webapp v18</div>
+    <div class="setnote" style="text-align:center;margin-top:6px">MatBrief · webapp v19</div>
   </div>
   <div id="endcap"><img src="mark.png" alt=""><div>fin du bulletin</div></div>
 </main>
@@ -338,6 +342,38 @@
   }
 
   rbtn.addEventListener('click', load);
+
+  /* NUCLEAR OPTION: size the app frame from the MEASURED visual viewport, not from
+     what iOS claims. Runs at load and on every viewport change. If iOS sizes the
+     web view short (standalone snapshot bug), the frame follows the real pixels. */
+  function syncViewport() {
+    var vv = window.visualViewport;
+    var h = vv ? Math.round(vv.height + vv.offsetTop) : window.innerHeight;
+    if (h > 0) { document.body.style.height = h + 'px'; }
+    var dbg = document.getElementById('dbgv');
+    if (dbg) dbg.textContent =
+      'screen ' + screen.height + ' · inner ' + window.innerHeight +
+      ' · docEl ' + document.documentElement.clientHeight +
+      (vv ? (' · vv ' + Math.round(vv.height) + '+' + Math.round(vv.offsetTop)) : ' · vv n/a') +
+      ' · standalone ' + (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches);
+  }
+  if (window.visualViewport) {
+    visualViewport.addEventListener('resize', syncViewport);
+    visualViewport.addEventListener('scroll', syncViewport);
+  }
+  window.addEventListener('resize', syncViewport);
+  window.addEventListener('orientationchange', function(){ setTimeout(syncViewport, 300); });
+  setTimeout(syncViewport, 50); setTimeout(syncViewport, 600); setInterval(syncViewport, 3000);
+  (function () {
+    var p = document.createElement('div');
+    p.style.cssText = 'position:fixed;visibility:hidden;top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px)';
+    document.body.appendChild(p);
+    setTimeout(function () {
+      var cs = getComputedStyle(p), d = document.getElementById('dbgs');
+      if (d) d.textContent = 'safe-area top ' + cs.top + ' · bottom ' + cs.bottom + ' · v19';
+      p.remove();
+    }, 400);
+  })();
 
   /* iOS: swipes starting on the header or tab bar must never drag the app frame */
   document.addEventListener('touchmove', function (e) {
