@@ -16,11 +16,13 @@
 <style>
   :root { --ink:#0c0d0f; --orange:#e8541f; --txt:#f4f5f7; --mut:#8b929d; --bg:#e9edf2; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body { height:100%; overflow-x:hidden; }
+  html { height:100%; overflow:hidden; overscroll-behavior:none; }
   body { margin:0; background:#0c0d0f; display:flex; flex-direction:column;
          font-family:-apple-system,'SF Pro Text','Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-         /* iOS standalone: pin to the REAL screen — kills the dead black band under the tab bar */
-         position:fixed; inset:0; height:100dvh; width:100%; }
+         /* iOS standalone: pin to the REAL screen, and make the frame IMMOVABLE —
+            only the report area (#scroller) scrolls; header and tab bar never move */
+         position:fixed; top:0; left:0; right:0; bottom:0;
+         height:100dvh; width:100vw; overflow:hidden; overscroll-behavior:none; }
   @supports not (height: 100dvh) { body { height:100%; } }
 
   /* ── App bar ─────────────────────────────────────────────── */
@@ -59,7 +61,7 @@
   @keyframes pulse { 50% { opacity:.3; } }
 
   /* ── Content (single scroll surface — pinch-zoom friendly) ── */
-  main { flex:1 1 auto; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; position:relative; background:#0c0d0f; }
+  main { flex:1 1 auto; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; position:relative; background:#0c0d0f; overscroll-behavior:contain; min-height:0; }
   main.pmode { overflow-x:auto; touch-action:pan-x pan-y; }
   #content { opacity:0; transition:opacity .45s ease; }
   #content.on { opacity:1; }
@@ -121,7 +123,7 @@
       <button class="zbtn" id="mbtn" aria-label="Basculer page / lecture">Page</button>
       <button class="zbtn" id="zminus" aria-label="Texte plus petit">A&#8722;</button>
       <button class="zbtn" id="zplus" aria-label="Texte plus grand">A+</button>
-      <span class="ver">v14</span>
+      <span class="ver">v15</span>
     </span>
   </div>
 </header>
@@ -141,7 +143,7 @@
       <div class="setnote">Le bulletin se met à jour tout seul chaque matin vers 6h31, et à chaque réouverture de l'app.</div>
     </div>
     <div class="setcard"><h4>Avis légal &amp; sources</h4><div id="slegal" class="setnote">(chargé avec le bulletin)</div></div>
-    <div class="setnote" style="text-align:center;margin-top:6px">MatBrief · webapp v14</div>
+    <div class="setnote" style="text-align:center;margin-top:6px">MatBrief · webapp v15</div>
   </div>
   <div id="endcap"><img src="mark.png" alt=""><div>fin du bulletin</div></div>
 </main>
@@ -327,6 +329,11 @@
   }
 
   rbtn.addEventListener('click', load);
+
+  /* iOS: swipes starting on the header or tab bar must never drag the app frame */
+  document.addEventListener('touchmove', function (e) {
+    if (!document.getElementById('scroller').contains(e.target)) e.preventDefault();
+  }, { passive: false });
 
   /* ---- bottom tabs ---- */
   var curTab = 'prix', setpanel = document.getElementById('setpanel'),
