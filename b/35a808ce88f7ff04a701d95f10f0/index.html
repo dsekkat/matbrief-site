@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0c0d0f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="MatBrief">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-512.png" type="image/png">
@@ -132,7 +132,7 @@
       <button class="zbtn" id="mbtn" aria-label="Basculer page / lecture">Page</button>
       <button class="zbtn" id="zminus" aria-label="Texte plus petit">A&#8722;</button>
       <button class="zbtn" id="zplus" aria-label="Texte plus grand">A+</button>
-      <span class="ver">v19</span>
+      <span class="ver">v20</span>
     </span>
   </div>
 </header>
@@ -155,7 +155,7 @@
       <div class="setnote" id="dbgs"></div>
     </div>
     <div class="setcard"><h4>Avis légal &amp; sources</h4><div id="slegal" class="setnote">(chargé avec le bulletin)</div></div>
-    <div class="setnote" style="text-align:center;margin-top:6px">MatBrief · webapp v19</div>
+    <div class="setnote" style="text-align:center;margin-top:6px">MatBrief · webapp v20</div>
   </div>
   <div id="endcap"><img src="mark.png" alt=""><div>fin du bulletin</div></div>
 </main>
@@ -370,7 +370,7 @@
     document.body.appendChild(p);
     setTimeout(function () {
       var cs = getComputedStyle(p), d = document.getElementById('dbgs');
-      if (d) d.textContent = 'safe-area top ' + cs.top + ' · bottom ' + cs.bottom + ' · v19';
+      if (d) d.textContent = 'safe-area top ' + cs.top + ' · bottom ' + cs.bottom + ' · v20';
       p.remove();
     }, 400);
   })();
