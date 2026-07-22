@@ -132,7 +132,7 @@
       <button class="zbtn" id="mbtn" aria-label="Basculer page / lecture">Page</button>
       <button class="zbtn" id="zminus" aria-label="Texte plus petit">A&#8722;</button>
       <button class="zbtn" id="zplus" aria-label="Texte plus grand">A+</button>
-      <span class="ver">v20</span>
+      <span class="ver">v21</span>
     </span>
   </div>
 </header>
@@ -155,7 +155,7 @@
       <div class="setnote" id="dbgs"></div>
     </div>
     <div class="setcard"><h4>Avis légal &amp; sources</h4><div id="slegal" class="setnote">(chargé avec le bulletin)</div></div>
-    <div class="setnote" style="text-align:center;margin-top:6px">MatBrief · webapp v20</div>
+    <div class="setnote" style="text-align:center;margin-top:6px">MatBrief · webapp v21</div>
   </div>
   <div id="endcap"><img src="mark.png" alt=""><div>fin du bulletin</div></div>
 </main>
@@ -286,6 +286,7 @@
     ' .sldt tbody b{font-size:12px !important;}',
     ' .sldt thead th{font-size:9.5px !important; letter-spacing:.3px !important;}',
     ' .sldt td:first-child, .sldt th:first-child{position:sticky; left:0; z-index:1;',
+    '   max-width:130px; white-space:normal !important; overflow-wrap:normal !important;',
     '   background:#fff; box-shadow:6px 0 6px -4px rgba(20,40,70,.12);}',
     ' .sldt tr:nth-child(even) td:first-child{background:#fbfcfd;}',
     ' .sldt thead th:first-child{background:#eef2f6;}',
@@ -370,7 +371,7 @@
     document.body.appendChild(p);
     setTimeout(function () {
       var cs = getComputedStyle(p), d = document.getElementById('dbgs');
-      if (d) d.textContent = 'safe-area top ' + cs.top + ' · bottom ' + cs.bottom + ' · v20';
+      if (d) d.textContent = 'safe-area top ' + cs.top + ' · bottom ' + cs.bottom + ' · v21';
       p.remove();
     }, 400);
   })();
